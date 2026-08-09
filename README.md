@@ -182,6 +182,52 @@ Data handling is designed around the **DPDP Act, 2023**: consent-first collectio
 
 ---
 
+## Local Setup & Running (Phase 2 Microservices)
+
+GigKavach Phase 2 is built as four bounded services behind an API Gateway, requiring Docker to run the infrastructure (PostgreSQL+PostGIS and Redis) and the microservices.
+
+**Prerequisites:**
+- Docker and Docker Compose
+- Node.js (for React admin dashboard)
+- Flutter SDK (for mobile app)
+
+**1. Start the Backend Services:**
+```bash
+cd services
+docker-compose up -d --build
+```
+This will start:
+- Postgres + PostGIS (port 5432)
+- Redis (port 6379)
+- Gateway (port 8000)
+- Worker & Earnings Service (port 8001)
+- Risk & Pricing Service (port 8002)
+- Claims & Payouts Service (port 8003)
+- Trust & Fraud Service (port 8004)
+
+**2. Seed the Database:**
+Run the one-shot seed container to populate the database with mock workers, zones, earnings, policies, and claims:
+```bash
+docker-compose --profile seed up seed
+```
+
+**3. Run the React Admin Dashboard:**
+```bash
+cd admin
+npm install
+npm run dev
+```
+
+**4. Run the Flutter Mobile App:**
+*Note: If running on a physical device, update `baseUrl` in `gigshield/lib/services/api_service.dart` to your machine's local IP address instead of `localhost`.*
+```bash
+cd gigshield
+flutter pub get
+flutter run
+```
+
+---
+
 ## Documentation
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — full system design, AI/ML pipeline, security, and production-readiness detail
