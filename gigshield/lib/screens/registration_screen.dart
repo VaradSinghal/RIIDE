@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 
 import '../services/supabase_service.dart';
 import '../services/premium_engine.dart';
+import '../services/api_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final void Function(BuildContext) onRegistrationComplete;
@@ -27,6 +28,8 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   // Step 2: Profile
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
+  final _aadhaarController = TextEditingController();
+  bool _kycVerified = false;
   String _selectedCity = 'Chennai';
   String _selectedPlatform = 'Swiggy';
   String _vehicleType = 'Bike';
@@ -123,7 +126,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   bool get _canProceed {
     switch (_currentStep) {
       case 0: return _otpVerified;
-      case 1: return _nameController.text.length >= 2 && _ageController.text.isNotEmpty && (int.tryParse(_ageController.text) ?? 0) >= 18;
+      case 1: return _nameController.text.length >= 2 && _ageController.text.isNotEmpty && (int.tryParse(_ageController.text) ?? 0) >= 18 && _kycVerified;
       case 2: return true;
       case 3: return _selectedZone.isNotEmpty;
       case 4: return _calculatedPremium != null;
@@ -320,7 +323,10 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         ),
         const SizedBox(height: 12),
         if (!_otpSent) SizedBox(width: double.infinity, child: OutlinedButton(
-          onPressed: _phoneController.text.length == 10 ? () => setState(() => _otpSent = true) : null,
+          onPressed: _phoneController.text.length == 10 ? () async {
+            setState(() => _otpSent = true);
+            await GigKavachApiService.requestOtp('+91${_phoneController.text}');
+          } : null,
           style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
           child: const Text('Send OTP', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
         )),
@@ -340,7 +346,16 @@ class _RegistrationScreenState extends State<RegistrationScreen>
               style: const TextStyle(fontSize: 20, color: AppColors.onboardTextDark, fontWeight: FontWeight.w700, letterSpacing: 8),
               textAlign: TextAlign.center,
               decoration: const InputDecoration(hintText: '• • • • • •', hintStyle: TextStyle(color: AppColors.onboardTextMuted, letterSpacing: 8), border: InputBorder.none),
-              onChanged: (val) { if (val.length == 6) setState(() => _otpVerified = true); },
+              onChanged: (val) async { 
+                if (val.length == 6) {
+                  final result = await GigKavachApiService.login('+91${_phoneController.text}', otp: val);
+                  if (result.containsKey('access_token')) {
+                    setState(() => _otpVerified = true);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid OTP')));
+                  }
+                } 
+              },
             ),
             const Center(child: Text('Enter any 6-digit code (demo)', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted))),
           ])),
@@ -382,6 +397,34 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         _dropdown('Platform', _selectedPlatform, _platforms, Icons.delivery_dining_rounded, (v) => setState(() => _selectedPlatform = v!)),
         const SizedBox(height: 16),
         _dropdown('Vehicle', _vehicleType, _vehicles, Icons.two_wheeler_rounded, (v) => setState(() => _vehicleType = v!)),
+        const SizedBox(height: 16),
+        
+        // KYC Section
+        _label('Identity Verification (DigiLocker)'),
+        _inputField('Aadhaar Number', _aadhaarController, Icons.badge_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)], hint: '12-digit Aadhaar'),
+        const SizedBox(height: 12),
+        if (!_kycVerified) SizedBox(width: double.infinity, child: OutlinedButton(
+          onPressed: _aadhaarController.text.length == 12 ? () async {
+            final res = await GigKavachApiService.verifyKyc('aadhaar', _aadhaarController.text);
+            if (res['status'] == 'verified') {
+              setState(() => _kycVerified = true);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Failed')));
+            }
+          } : null,
+          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+          child: const Text('Verify Identity', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+        )),
+        if (_kycVerified) Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.onboardSuccess.withValues(alpha: 0.3))),
+            child: Row(children: [
+              Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.onboardSuccess.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Identity Verified successfully via DigiLocker.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.onboardSuccess))),
+            ]),
+        ),
         const SizedBox(height: 16),
       ]),
     );
