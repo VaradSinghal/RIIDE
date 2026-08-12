@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import '../theme/app_theme.dart';
-import '../services/supabase_service.dart';
 import '../services/claim_manager.dart';
 
 class SimulationBottomSheet extends StatefulWidget {

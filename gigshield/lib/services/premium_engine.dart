@@ -674,8 +674,10 @@ class PremiumEngine {
     double score = 0;
 
     // Age component (0-15)
-    if (driverAge < 22) score += 12;
-    else if (driverAge < 25) score += 8;
+    if (driverAge < 22) {
+      score += 12;
+    // ignore: curly_braces_in_flow_control_structures
+    } else if (driverAge < 25) score += 8;
     else if (driverAge <= 40) score += 3;
     else if (driverAge <= 50) score += 7;
     else score += 13;

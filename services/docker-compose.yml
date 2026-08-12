@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+  # ── Infrastructure ──
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_DB: gigkavach
+      POSTGRES_USER: gigkavach
+      POSTGRES_PASSWORD: gigkavach_dev_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gigkavach -d gigkavach"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── API Gateway (port 8000) ──
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      worker-earnings:
+        condition: service_healthy
+      risk-pricing:
+        condition: service_healthy
+      claims-payouts:
+        condition: service_healthy
+      trust-fraud:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Service 1: Worker & Earnings (port 8001) ──
+  worker-earnings:
+    build: ./worker-earnings
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Service 2: Risk & Pricing (port 8002) ──
+  risk-pricing:
+    build: ./risk-pricing
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Service 3: Claims & Payouts (port 8003) ──
+  claims-payouts:
+    build: ./claims-payouts
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      trust-fraud:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Service 4: Trust & Fraud (port 8004) ──
+  trust-fraud:
+    build: ./trust-fraud
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Seed runner (one-shot) ──
+  seed:
+    build:
+      context: .
+      dockerfile: seed/Dockerfile
+    env_file: .env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    profiles:
+      - seed
+
+volumes:
+  pgdata:

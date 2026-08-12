@@ -4,7 +4,6 @@ import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/boost_screen.dart';
 import 'screens/insurance_screen.dart';
-import 'screens/risk_map_screen.dart';
 import 'screens/wallet_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/registration_screen.dart';

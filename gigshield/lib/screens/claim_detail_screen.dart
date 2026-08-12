@@ -384,7 +384,6 @@ class ClaimDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-          ),
         ],
       ),
     );

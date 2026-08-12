@@ -126,7 +126,7 @@ class NotificationsScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
-                        lineHeight: 1.4,
+                        height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 8),

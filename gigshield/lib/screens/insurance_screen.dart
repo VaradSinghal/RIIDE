@@ -5,7 +5,6 @@ import '../data/mock_data.dart';
 import '../services/supabase_service.dart';
 import '../services/premium_engine.dart';
 import '../widgets/common_widgets.dart';
-import '../widgets/simulation_bottom_sheet.dart';
 import '../widgets/demo_claim_overlay.dart';
 import '../widgets/payment_processing_overlay.dart';
 import 'claim_detail_screen.dart';
