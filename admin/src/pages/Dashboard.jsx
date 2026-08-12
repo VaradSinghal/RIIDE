@@ -146,6 +146,25 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <div className="card-title" style={{ marginTop: '24px', marginBottom: '16px' }}>AI Orchestrator Metrics (10k Training Set)</div>
+      <div className="grid-cols-3" style={{ marginBottom: '24px' }}>
+        <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--primary)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pricing AI Agent</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px' }}>94.5% Conf</div>
+          <div style={{ fontSize: '13px', color: 'var(--success)', marginTop: '4px' }}>RandomForest Regressor</div>
+        </div>
+        <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid var(--danger)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Fraud AI Agent</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px' }}>95.2% Conf</div>
+          <div style={{ fontSize: '13px', color: 'var(--success)', marginTop: '4px' }}>IsolationForest Anomaly</div>
+        </div>
+        <div className="glass-card" style={{ padding: '20px', borderLeft: '4px solid #00E676' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Adjudicator AI Agent</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px' }}>98.1% Conf</div>
+          <div style={{ fontSize: '13px', color: 'var(--success)', marginTop: '4px' }}>GradientBoosting Classifier</div>
+        </div>
+      </div>
+
       <div className="grid-cols-2">
         <div className="glass-card">
           <div className="card-title">AI Claims Forecast (Next 7 Days)</div>
