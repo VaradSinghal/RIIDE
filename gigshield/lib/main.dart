@@ -6,7 +6,7 @@ import 'screens/boost_screen.dart';
 import 'screens/insurance_screen.dart';
 import 'screens/wallet_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/registration_screen.dart';
+import 'screens/landing_screen.dart';
 import 'screens/splash_screen.dart';
 import 'dart:async';
 import 'data/mock_data.dart';
@@ -50,7 +50,7 @@ class _GigKavachAppState extends State<GigKavachApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: SplashScreen(
-        nextScreen: _isRegistered ? const MainNavigationShell() : RegistrationScreen(
+        nextScreen: _isRegistered ? const MainNavigationShell() : LandingScreen(
           onRegistrationComplete: (ctx) {
             setState(() {
               _isRegistered = true;

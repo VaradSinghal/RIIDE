@@ -18,22 +18,76 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final card = Container(
-      padding: padding ?? const EdgeInsets.all(16),
+      padding: padding ?? const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: gradient == null ? AppColors.bgCard : null,
-        borderRadius: BorderRadius.circular(16),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
         border: Border.all(
-          color: AppColors.borderLight,
-          width: 1,
+          color: AppColors.borderLight.withValues(alpha: 0.5),
+          width: 1.5,
         ),
       ),
       child: child,
     );
 
     if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: card);
+      return BouncingCard(onTap: onTap!, child: card);
     }
     return card;
+  }
+}
+
+class BouncingCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const BouncingCard({super.key, required this.child, required this.onTap});
+
+  @override
+  State<BouncingCard> createState() => _BouncingCardState();
+}
+
+class _BouncingCardState extends State<BouncingCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
+      ),
+    );
   }
 }
 

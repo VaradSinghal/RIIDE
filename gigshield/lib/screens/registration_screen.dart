@@ -49,6 +49,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   PremiumResult? _calculatedPremium;
   int _calculationStep = 0;
   bool _isRegistering = false;
+  bool _irdaiConsent = false;
 
   final _cities = ['Chennai', 'Delhi', 'Mumbai'];
   final _platforms = ['Swiggy', 'Zomato'];
@@ -129,7 +130,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
       case 1: return _nameController.text.length >= 2 && _ageController.text.isNotEmpty && (int.tryParse(_ageController.text) ?? 0) >= 18 && _kycVerified;
       case 2: return true;
       case 3: return _selectedZone.isNotEmpty;
-      case 4: return _calculatedPremium != null;
+      case 4: return _calculatedPremium != null && _irdaiConsent;
       default: return false;
     }
   }
@@ -710,7 +711,157 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         ]),
       ),
       const SizedBox(height: 16),
+
+      // IRDAI Consent Checkbox
+      GestureDetector(
+        onTap: () {
+          setState(() {
+            _irdaiConsent = !_irdaiConsent;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _irdaiConsent ? AppColors.onboardSuccessBg : AppColors.onboardCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _irdaiConsent ? AppColors.onboardSuccess : AppColors.onboardBorder),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                _irdaiConsent ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                color: _irdaiConsent ? AppColors.onboardSuccess : AppColors.onboardTextMuted,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'I agree to the IRDAI Micro-Insurance Guidelines',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _irdaiConsent ? AppColors.onboardSuccess : AppColors.onboardTextDark,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'I consent to the use of parametric trigger data (weather, location, AQI) for automated claim adjudication and payout calculations as per IRDAI Sandbox regulations.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.onboardTextBody,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        _showKfdBottomSheet(context);
+                      },
+                      child: Text(
+                        'View Key Features Document (KFD)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onboardBluePrimary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
     ]));
+  }
+
+  void _showKfdBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Key Features Document',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onboardTextDark),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'IRDAI Micro-Insurance Parametric Policy',
+              style: TextStyle(fontSize: 14, color: AppColors.onboardTextMuted),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _kfdSection('1. Coverage Details', 'This policy provides parametric coverage for gig workers against environmental and civic disruptions (Heavy Rainfall >40mm/6h, Severe AQI >350/3h, Extreme Heat >43°C, Flooding, Civic Disruptions).'),
+                    _kfdSection('2. Premium Payment', 'Premium is collected weekly and dynamically priced using AI-driven risk scoring based on your working zone, vehicle type, and experience.'),
+                    _kfdSection('3. Claim Settlement', 'Claims are adjudicated autonomously using 3rd-party Oracle data (IMD, AQI indices). Payouts are instant and require no manual claim filing.'),
+                    _kfdSection('4. Exclusions', 'Routine traffic, personal vehicle breakdown, and non-verified environmental triggers are excluded.'),
+                    _kfdSection('5. Grievance Redressal', 'Contact our Grievance Officer at grievance@gigkavach.in or call 1800-XXX-XXXX within 15 days of dispute.'),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.onboardBluePrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('I Understand', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kfdSection(String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+          const SizedBox(height: 6),
+          Text(body, style: const TextStyle(fontSize: 13, color: AppColors.onboardTextBody, height: 1.5)),
+        ],
+      ),
+    );
   }
 
   Widget _simStep(String text, bool done) {

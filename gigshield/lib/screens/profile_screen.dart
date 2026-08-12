@@ -66,6 +66,25 @@ class ProfileScreen extends StatelessWidget {
                 'Trust Score',
                 AppColors.success,
               ),
+              const SectionHeader(title: 'Legal & Policies'),
+              GestureDetector(
+                onTap: () => _showKfdBottomSheet(context),
+                child: _buildMenuItem(
+                  Icons.policy_outlined,
+                  'IRDAI Key Features Document',
+                  AppColors.primary,
+                ),
+              ),
+              _buildMenuItem(
+                Icons.support_agent_outlined,
+                'Grievance Redressal',
+                AppColors.warning,
+              ),
+              _buildMenuItem(
+                Icons.privacy_tip_outlined,
+                'Privacy Policy',
+                AppColors.textSecondary,
+              ),
               const SectionHeader(title: 'App'),
               _buildMenuItem(
                 Icons.notifications_outlined,
@@ -259,6 +278,88 @@ class ProfileScreen extends StatelessWidget {
             color: AppColors.danger,
           ),
         ),
+      ),
+    );
+  }
+
+  void _showKfdBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Key Features Document',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'IRDAI Micro-Insurance Parametric Policy',
+              style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _kfdSection('1. Coverage Details', 'This policy provides parametric coverage for gig workers against environmental and civic disruptions (Heavy Rainfall >40mm/6h, Severe AQI >350/3h, Extreme Heat >43°C, Flooding, Civic Disruptions).'),
+                    _kfdSection('2. Premium Payment', 'Premium is collected weekly and dynamically priced using AI-driven risk scoring based on your working zone, vehicle type, and experience.'),
+                    _kfdSection('3. Claim Settlement', 'Claims are adjudicated autonomously using 3rd-party Oracle data (IMD, AQI indices). Payouts are instant and require no manual claim filing.'),
+                    _kfdSection('4. Exclusions', 'Routine traffic, personal vehicle breakdown, and non-verified environmental triggers are excluded.'),
+                    _kfdSection('5. Grievance Redressal', 'Contact our Grievance Officer at grievance@gigkavach.in or call 1800-XXX-XXXX within 15 days of dispute.'),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kfdSection(String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          const SizedBox(height: 6),
+          Text(body, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
+        ],
       ),
     );
   }
