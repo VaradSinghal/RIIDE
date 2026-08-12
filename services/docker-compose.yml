@@ -31,7 +31,9 @@ services:
 
   # ── API Gateway (port 8000) ──
   gateway:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
     ports:
       - "8000:8000"
     env_file: .env
@@ -54,7 +56,9 @@ services:
 
   # ── Service 1: Worker & Earnings (port 8001) ──
   worker-earnings:
-    build: ./worker-earnings
+    build:
+      context: .
+      dockerfile: worker-earnings/Dockerfile
     env_file: .env
     depends_on:
       postgres:
@@ -69,7 +73,9 @@ services:
 
   # ── Service 2: Risk & Pricing (port 8002) ──
   risk-pricing:
-    build: ./risk-pricing
+    build:
+      context: .
+      dockerfile: risk-pricing/Dockerfile
     env_file: .env
     depends_on:
       postgres:
@@ -82,7 +88,9 @@ services:
 
   # ── Service 3: Claims & Payouts (port 8003) ──
   claims-payouts:
-    build: ./claims-payouts
+    build:
+      context: .
+      dockerfile: claims-payouts/Dockerfile
     env_file: .env
     depends_on:
       postgres:
@@ -97,7 +105,9 @@ services:
 
   # ── Service 4: Trust & Fraud (port 8004) ──
   trust-fraud:
-    build: ./trust-fraud
+    build:
+      context: .
+      dockerfile: trust-fraud/Dockerfile
     env_file: .env
     depends_on:
       postgres:

@@ -14,11 +14,6 @@ GigKavach — Trust & Fraud: Confidence Scorer
 """
 
 from dataclasses import dataclass, field
-from app.services.env_verifier import verify_environment
-from app.services.location_verifier import verify_location
-from app.services.activity_verifier import verify_activity
-from app.services.timing_verifier import verify_timing
-from app.services.device_verifier import verify_device
 
 
 @dataclass
@@ -37,12 +32,17 @@ class ConfidenceResult:
     breakdown: list  # List[DimensionResult]
     explanation: str
 
-
 def score_claim(claim_data: dict) -> ConfidenceResult:
     """
     Score a claim across all 5 truth dimensions.
     Returns a ConfidenceResult with the total score, action, and breakdown.
     """
+    from app.services.env_verifier import verify_environment
+    from app.services.location_verifier import verify_location
+    from app.services.activity_verifier import verify_activity
+    from app.services.timing_verifier import verify_timing
+    from app.services.device_verifier import verify_device
+
     dimensions = [
         verify_environment(claim_data),
         verify_location(claim_data),
