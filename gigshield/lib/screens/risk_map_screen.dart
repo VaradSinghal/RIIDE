@@ -411,11 +411,11 @@ class _RiskMapScreenState extends State<RiskMapScreen> with SingleTickerProvider
                     Text(z.zone, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                     Row(
                       children: [
-                        Text(z.riskLabel, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: z.riskColor)),
+                        Flexible(child: Text(z.riskLabel, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: z.riskColor))),
                         const SizedBox(width: 8),
-                        Text('·', style: TextStyle(color: AppColors.textMuted)),
+                        const Text('·', style: TextStyle(color: AppColors.textMuted)),
                         const SizedBox(width: 8),
-                        Text(z.h3Index, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'monospace')),
+                        Flexible(child: Text(z.h3Index, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'monospace'), overflow: TextOverflow.ellipsis)),
                       ],
                     ),
                   ],
@@ -514,15 +514,14 @@ class _RiskMapScreenState extends State<RiskMapScreen> with SingleTickerProvider
   Widget _buildLegend() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 12,
+        runSpacing: 6,
         children: [
           _legendItem(AppColors.success, 'Low (0–39)'),
-          const SizedBox(width: 12),
           _legendItem(AppColors.warning, 'Moderate (40–59)'),
-          const SizedBox(width: 12),
           _legendItem(AppColors.danger, 'High (60–79)'),
-          const SizedBox(width: 12),
           _legendItem(const Color(0xFFE84393), 'Critical (80+)'),
         ],
       ),
