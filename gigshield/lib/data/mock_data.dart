@@ -14,18 +14,18 @@ class MockData {
   static bool isRegistered = true;
 
   // ─── Earnings ───────────────────────────────────────────────────
-  static const double todayEarnings = 847.0;
-  static const double weekEarnings = 3420.0;
-  static const double monthEarnings = 14850.0;
-  static const double avgWeeklyIncome = 4200.0;
-  static const double avgHourlyIncome = 70.0;
+  static double todayEarnings = 847.0;
+  static double weekEarnings = 3420.0;
+  static double monthEarnings = 14850.0;
+  static double avgWeeklyIncome = 4200.0;
+  static double avgHourlyIncome = 70.0;
 
-  static const Map<String, double> platformEarnings = {
+  static Map<String, double> platformEarnings = {
     'Swiggy': 2150.0,
     'Zomato': 890.0,
   };
 
-  static const List<double> weeklyDailyEarnings = [
+  static List<double> weeklyDailyEarnings = [
     620,
     780,
     430,
@@ -45,28 +45,28 @@ class MockData {
   ];
 
   // ─── Insurance Policy ───────────────────────────────────────────
-  static const double weeklyPremium = 45.0;
-  static const double coverageCeiling = 2940.0;
-  static const bool isCovered = true;
-  static const int policyDaysRemaining = 4;
-  static const String policyId = 'POL-GK-2026-0847';
-  static const String policyStatus = 'Active';
-  static const String policyStartDate = '15 Mar 2026';
-  static const String policyEndDate = '22 Mar 2026';
-  static const String policyTier = 'Standard';
-  static const double coveragePercentage = 70.0;
+  static double weeklyPremium = 45.0;
+  static double coverageCeiling = 2940.0;
+  static bool isCovered = true;
+  static int policyDaysRemaining = 4;
+  static String policyId = 'POL-GK-2026-0847';
+  static String policyStatus = 'Active';
+  static String policyStartDate = '15 Mar 2026';
+  static String policyEndDate = '22 Mar 2026';
+  static String policyTier = 'Standard';
+  static double coveragePercentage = 70.0;
   static int totalClaimsPaid = 3;
   static double totalPayoutsReceived = 1330.0;
 
   // Premium Breakdown (Phase 2 — Dynamic)
-  static const double basePremium = 25.0;
-  static const double zoneRiskAdjustment = 12.0;
-  static const double weatherAdjustment = 8.0;
-  static const double claimsHistoryFactor = 3.0;
-  static const double loyaltyDiscount = 3.0;
+  static double basePremium = 25.0;
+  static double zoneRiskAdjustment = 12.0;
+  static double weatherAdjustment = 8.0;
+  static double claimsHistoryFactor = 3.0;
+  static double loyaltyDiscount = 3.0;
 
   // Premium factors with explanations
-  static const List<Map<String, dynamic>> premiumFactors = [
+  static List<Map<String, dynamic>> premiumFactors = [
     {
       'label': 'Base Rate (Standard)',
       'amount': 25.0,
@@ -100,7 +100,7 @@ class MockData {
   ];
 
   // ─── Policy History ─────────────────────────────────────────────
-  static const List<Map<String, dynamic>> policyHistory = [
+  static List<Map<String, dynamic>> policyHistory = [
     {
       'id': 'POL-GK-2026-0847',
       'period': 'Mar 15 - Mar 22',
@@ -144,7 +144,7 @@ class MockData {
   ];
 
   // ─── Regulatory Info ────────────────────────────────────────────
-  static const List<String> exclusions = [
+  static List<String> exclusions = [
     'Self-inflicted disruption or injury',
     'Disruptions during non-working hours (11 PM - 5 AM)',
     'Pre-existing platform bans or suspensions',
@@ -154,12 +154,12 @@ class MockData {
     'Fraudulent claims or GPS spoofing',
   ];
 
-  static const String coolingOffPeriod = '7 days';
-  static const String grievanceEmail = 'support@gigkavach.in';
-  static const String grievancePhone = '1800-GIG-HELP';
+  static String coolingOffPeriod = '7 days';
+  static String grievanceEmail = 'support@gigkavach.in';
+  static String grievancePhone = '1800-GIG-HELP';
 
   // ─── Claims Management ──────────────────────────────────────────
-  static const List<Map<String, dynamic>> claimsHistory = [
+  static List<Map<String, dynamic>> claimsHistory = [
     {
       'id': 'CLM-100847',
       'date': '12 Mar 2026',
@@ -266,7 +266,7 @@ class MockData {
   ];
 
   // ─── Active Triggers (Simulated Live Status) ────────────────────
-  static const List<Map<String, dynamic>> activeTriggers = [
+  static List<Map<String, dynamic>> activeTriggers = [
     {
       'id': 'rain',
       'icon': 'water_drop',
@@ -388,22 +388,22 @@ class MockData {
   }
 
   // ─── Stability Score ────────────────────────────────────────────
-  static const int stabilityScore = 62;
-  static const double earningsConsistency = 68.0;
-  static const double riskExposure = 55.0;
-  static const double insuranceUtil = 80.0;
-  static const double savingsBehavior = 45.0;
+  static int stabilityScore = 62;
+  static double earningsConsistency = 68.0;
+  static double riskExposure = 55.0;
+  static double insuranceUtil = 80.0;
+  static double savingsBehavior = 45.0;
 
   // ─── Work Decision ──────────────────────────────────────────────
-  static const int decisionScore = 72;
-  static const String decisionLabel = 'GO';
-  static const double demandScore = 78.0;
-  static const double weatherSafety = 65.0;
-  static const double coverageBonus = 80.0;
-  static const double historicalStability = 60.0;
+  static int decisionScore = 72;
+  static String decisionLabel = 'GO';
+  static double demandScore = 78.0;
+  static double weatherSafety = 65.0;
+  static double coverageBonus = 80.0;
+  static double historicalStability = 60.0;
 
   // ─── Boost Recommendations ──────────────────────────────────────
-  static const List<Map<String, dynamic>> boostZones = [
+  static List<Map<String, dynamic>> boostZones = [
     {
       'zone': 'Velachery',
       'score': 92,
@@ -435,7 +435,7 @@ class MockData {
   ];
 
   // ─── Risk Zones ─────────────────────────────────────────────────
-  static const List<Map<String, dynamic>> riskZones = [
+  static List<Map<String, dynamic>> riskZones = [
     {'zone': 'Adyar', 'risk': 65, 'label': 'Moderate', 'rain': '12mm'},
     {'zone': 'Velachery', 'risk': 35, 'label': 'Low', 'rain': '2mm'},
     {'zone': 'T. Nagar', 'risk': 25, 'label': 'Low', 'rain': '0mm'},
@@ -447,7 +447,7 @@ class MockData {
   ];
 
   // ─── Weekly Forecast ────────────────────────────────────────────
-  static const List<Map<String, dynamic>> weekForecast = [
+  static List<Map<String, dynamic>> weekForecast = [
     {'day': 'Thu', 'risk': 30, 'rain': '2mm', 'demand': 'High'},
     {'day': 'Fri', 'risk': 45, 'rain': '8mm', 'demand': 'Medium'},
     {'day': 'Sat', 'risk': 75, 'rain': '25mm', 'demand': 'Low'},
@@ -458,7 +458,7 @@ class MockData {
   ];
 
   // ─── Insurance Plans (for catalog) ──────────────────────────────
-  static const List<Map<String, dynamic>> insurancePlans = [
+  static List<Map<String, dynamic>> insurancePlans = [
     {
       'name': 'Basic',
       'price': 25,
@@ -495,4 +495,89 @@ class MockData {
       ],
     },
   ];
+
+  // ─── Profile Loading Logic ───────────────────────────────────────
+  static void loadProfileForPhone(String phone) {
+    if (phone.contains('9999999999')) {
+      // Demo Admin Profile: Fully populated with policies and claims
+      workerName = 'Varad Singhal (Admin)';
+      workerPhone = '+91 99999 99999';
+      isCovered = true;
+      policyStatus = 'Active';
+      policyTier = 'Standard';
+      totalClaimsPaid = 3;
+      totalPayoutsReceived = 1330.0;
+      walletBalance = 1585.0;
+      stabilityScore = 88;
+      
+      todayEarnings = 847.0;
+      weekEarnings = 3420.0;
+      monthEarnings = 14850.0;
+      weeklyDailyEarnings = [620, 780, 430, 890, 700, 0, 0];
+      platformEarnings = {'Swiggy': 2150.0, 'Zomato': 890.0};
+      decisionScore = 72;
+      decisionLabel = 'GO';
+      
+      activeTriggers = [
+        {'id': 'rain', 'icon': 'water_drop', 'label': 'Heavy Rain', 'value': '45mm/hr', 'color': 0xFF2196F3},
+        {'id': 'aqi', 'icon': 'air', 'label': 'Severe AQI', 'value': '342', 'color': 0xFFF44336},
+      ];
+      boostZones = [
+        {'zone': 'Velachery', 'score': 92, 'bonus': '+₹45/hr', 'trend': 'up', 'icon': 'trending_up'},
+        {'zone': 'Adyar', 'score': 85, 'bonus': '+₹30/hr', 'trend': 'stable', 'icon': 'trending_flat'},
+      ];
+      riskZones = [
+        {'zone': 'Adyar', 'risk': 65, 'label': 'Moderate', 'rain': '12mm'},
+        {'zone': 'Velachery', 'risk': 35, 'label': 'Low', 'rain': '2mm'},
+      ];
+
+      claimsHistory = [
+        {
+          'id': 'CLM-100847', 'date': '12 Mar 2026', 'type': 'Heavy Rainfall', 'amount': 420.0,
+          'status': 'Paid', 'hours': 6.0, 'confidenceScore': 92, 'triggerData': 'Rainfall: 48mm in 6hrs at Adyar zone',
+          'timeline': [
+            {'time': '2:15 PM', 'event': 'Trigger detected: Heavy rainfall > 40mm', 'status': 'detected'},
+            {'time': '2:16 PM', 'event': 'Auto-claim created', 'status': 'created'},
+            {'time': '2:17 PM', 'event': 'Fraud validation: Score 92/100', 'status': 'validated'},
+            {'time': '2:18 PM', 'event': 'Payout calculated: 6hrs \u00d7 \u20b970/hr \u00d7 70%', 'status': 'calculated'},
+            {'time': '2:22 PM', 'event': 'Payout processed via UPI', 'status': 'paid'},
+          ],
+        }
+      ];
+
+      policyHistory = [
+        {'id': 'POL-GK-2026-0847', 'period': 'Mar 15 - Mar 22', 'tier': 'Standard', 'premium': 45.0, 'status': 'Active', 'claims': 0},
+        {'id': 'POL-GK-2026-0732', 'period': 'Mar 8 - Mar 15', 'tier': 'Standard', 'premium': 42.0, 'status': 'Completed', 'claims': 1},
+      ];
+
+    } else {
+      // New User Profile: Blank slate for underwriting demonstration
+      workerName = 'New User';
+      workerPhone = phone;
+      isCovered = false;
+      policyStatus = 'Not Active';
+      policyTier = 'None';
+      totalClaimsPaid = 0;
+      totalPayoutsReceived = 0.0;
+      walletBalance = 0.0;
+      stabilityScore = 20;
+      
+      // Clean UI: No dummy earnings or triggers for new users
+      todayEarnings = 0.0;
+      weekEarnings = 0.0;
+      monthEarnings = 0.0;
+      weeklyDailyEarnings = [0, 0, 0, 0, 0, 0, 0];
+      platformEarnings = {};
+      decisionScore = 50;
+      decisionLabel = 'N/A';
+      
+      activeTriggers = [];
+      boostZones = [];
+      riskZones = [];
+      
+      claimsHistory = [];
+      policyHistory = [];
+      walletTransactions = [];
+    }
+  }
 }

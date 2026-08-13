@@ -29,7 +29,10 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _aadhaarController = TextEditingController();
+  final _kycOtpController = TextEditingController();
   bool _kycVerified = false;
+  int _kycStep = 0; // 0=Input, 1=Generating, 2=Review, 3=OTP, 4=Verified
+  bool _kycConsent = false;
   String _selectedCity = 'Chennai';
   String _selectedPlatform = 'Swiggy';
   String _vehicleType = 'Bike';
@@ -78,6 +81,8 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     _otpController.dispose();
     _nameController.dispose();
     _ageController.dispose();
+    _aadhaarController.dispose();
+    _kycOtpController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -401,31 +406,118 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         const SizedBox(height: 16),
         
         // KYC Section
-        _label('Identity Verification (DigiLocker)'),
-        _inputField('Aadhaar Number', _aadhaarController, Icons.badge_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)], hint: '12-digit Aadhaar'),
-        const SizedBox(height: 12),
-        if (!_kycVerified) SizedBox(width: double.infinity, child: OutlinedButton(
-          onPressed: _aadhaarController.text.length == 12 ? () async {
-            final res = await GigKavachApiService.verifyKyc('aadhaar', _aadhaarController.text);
-            if (res['status'] == 'verified') {
-              setState(() => _kycVerified = true);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Failed')));
-            }
-          } : null,
-          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
-          child: const Text('Verify Identity', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
-        )),
-        if (_kycVerified) Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.onboardSuccess.withValues(alpha: 0.3))),
-            child: Row(children: [
-              Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.onboardSuccess.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Identity Verified successfully via DigiLocker.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.onboardSuccess))),
+        const SizedBox(height: 16),
+        _label('Identity & Background Verification'),
+        if (_kycStep == 0) ...[
+          _inputField('Aadhaar Number', _aadhaarController, Icons.badge_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)], hint: '12-digit Aadhaar'),
+          const SizedBox(height: 12),
+          SizedBox(width: double.infinity, child: OutlinedButton(
+            onPressed: _aadhaarController.text.length == 12 ? () async {
+              setState(() => _kycStep = 1);
+              // Simulate API delay for document generation
+              await Future.delayed(const Duration(seconds: 1));
+              if (mounted) setState(() => _kycStep = 2);
+            } : null,
+            style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+            child: const Text('Start eKYC Verification', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+          )),
+        ] else if (_kycStep == 1) ...[
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: _cardDecor,
+            child: Column(children: [
+              const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onboardBluePrimary)),
+              const SizedBox(height: 16),
+              const Text('Fetching records via CERSAI...', style: TextStyle(fontSize: 13, color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              Text('Generating onboarding documents...', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted)),
             ]),
-        ),
+          ),
+        ] else if (_kycStep == 2) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              GestureDetector(
+                onTap: () => _showDocumentPreview(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppColors.onboardBlueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(8)),
+                  child: Row(children: [
+                    const Icon(Icons.picture_as_pdf_rounded, color: AppColors.onboardBluePrimary, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('GigKavach Master Policy', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+                      const Text('Tap to view document', style: TextStyle(fontSize: 11, color: AppColors.onboardBluePrimary, decoration: TextDecoration.underline)),
+                    ])),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => setState(() => _kycConsent = !_kycConsent),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(_kycConsent ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded, color: _kycConsent ? AppColors.onboardSuccess : AppColors.onboardTextMuted, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('I authorize GigKavach to fetch my KYC details from UIDAI and I agree to the policy terms.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextBody))),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(width: double.infinity, child: ElevatedButton(
+                onPressed: _kycConsent ? () => setState(() => _kycStep = 3) : null,
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                child: const Text('E-Sign via Aadhaar OTP', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              )),
+            ]),
+          ),
+        ] else if (_kycStep == 3) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Enter Aadhaar OTP', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 4),
+              Text('OTP sent to UIDAI registered mobile number for e-Sign.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _kycOtpController, keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                style: const TextStyle(fontSize: 20, color: AppColors.onboardTextDark, fontWeight: FontWeight.w700, letterSpacing: 8),
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(hintText: '• • • • • •', hintStyle: TextStyle(color: AppColors.onboardTextMuted, letterSpacing: 8), border: InputBorder.none),
+                onChanged: (val) async {
+                  if (val.length == 6) {
+                    setState(() => _kycStep = 1); // Loading state
+                    await Future.delayed(const Duration(milliseconds: 1500));
+                    final res = await GigKavachApiService.verifyKyc('aadhaar', _aadhaarController.text);
+                    if (res['status'] == 'verified') {
+                      if (mounted) setState(() { _kycStep = 4; _kycVerified = true; });
+                    } else {
+                      if (mounted) {
+                        setState(() { _kycStep = 3; _kycOtpController.clear(); });
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('E-Sign Failed')));
+                      }
+                    }
+                  }
+                },
+              ),
+            ]),
+          ),
+        ] else if (_kycStep == 4) ...[
+          Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.onboardSuccess.withValues(alpha: 0.3))),
+              child: Row(children: [
+                Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.onboardSuccess.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
+                const SizedBox(width: 12),
+                const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Document E-Signed successfully.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
+                  Text('KYC fetched via DigiLocker.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess)),
+                ])),
+              ]),
+          ),
+        ],
         const SizedBox(height: 16),
       ]),
     );
@@ -602,11 +694,11 @@ class _RegistrationScreenState extends State<RegistrationScreen>
       dailyTravelKm: _dailyTravelKm, dailyOrderVolume: _dailyOrderVolume,
       dailyHours: _dailyHours,
     );
-    setState(() { _calculatedPremium = result; _isCalculatingPremium = false; _calculationStep = 0; });
+    setState(() { _calculatedPremium = result; _calculationStep = 5; });
   }
 
   Widget _buildPlanStep() {
-    if (_calculatedPremium == null) {
+    if (_calculatedPremium == null || _calculationStep == 5) {
       return SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(children: [
         const SizedBox(height: 20),
         Container(
@@ -625,12 +717,24 @@ class _RegistrationScreenState extends State<RegistrationScreen>
             Text('Our AI analyzes your age, travel distance, order volume, zone history, and weather to build a policy uniquely priced for you.', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColors.onboardTextBody, height: 1.5)),
             const SizedBox(height: 28),
             if (_isCalculatingPremium) ...[
-              const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: AppColors.onboardBluePrimary, strokeWidth: 2)),
+              if (_calculationStep < 5)
+                const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: AppColors.onboardBluePrimary, strokeWidth: 2)),
               const SizedBox(height: 16),
               _simStep('Analyzing age & travel profile', _calculationStep >= 1),
               _simStep('Evaluating area historic conditions', _calculationStep >= 2),
               _simStep('Processing order volume risk', _calculationStep >= 3),
               _simStep('Computing personalized premium', _calculationStep >= 4),
+              if (_calculationStep == 5) ...[
+                const SizedBox(height: 24),
+                SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() { _isCalculatingPremium = false; _calculationStep = 0; });
+                  },
+                  icon: const Icon(Icons.assignment_turned_in_rounded, color: Colors.white, size: 18),
+                  label: const Text('Review Policy', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardSuccess, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
+                )),
+              ]
             ] else
               SizedBox(width: double.infinity, child: ElevatedButton.icon(
                 onPressed: _runPremiumSimulation,
@@ -860,6 +964,110 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           const SizedBox(height: 6),
           Text(body, style: const TextStyle(fontSize: 13, color: AppColors.onboardTextBody, height: 1.5)),
         ],
+      ),
+    );
+  }
+
+  void _showDocumentPreview(BuildContext context) {
+    final name = _nameController.text.isEmpty ? 'The Undersigned' : _nameController.text;
+    final aadhaar = _aadhaarController.text;
+    final maskedAadhaar = aadhaar.length == 12 ? 'XXXX-XXXX-${aadhaar.substring(8)}' : 'XXXX-XXXX-XXXX';
+    final date = DateTime.now().toLocal().toString().split(' ')[0];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF7F5F0), // Off-white paper feel
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                const Icon(Icons.picture_as_pdf_rounded, color: Colors.redAccent, size: 24),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('GigKavach e-Agreement', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87))),
+                IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(ctx)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade300),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(child: Text('MASTER INSURANCE POLICY AGREEMENT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.underline, letterSpacing: 1.2))),
+                      const SizedBox(height: 24),
+                      Text('Date: $date', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+                      const SizedBox(height: 16),
+                      Text.rich(
+                        TextSpan(
+                          style: const TextStyle(fontSize: 12, height: 1.6, color: Colors.black87),
+                          children: [
+                            const TextSpan(text: 'This agreement is executed between '),
+                            const TextSpan(text: 'GigKavach Technologies Pvt. Ltd.', style: TextStyle(fontWeight: FontWeight.w700)),
+                            const TextSpan(text: ' (hereinafter referred to as the "Insurer") and \n\n'),
+                            const TextSpan(text: 'Name: ', style: TextStyle(fontWeight: FontWeight.w700)),
+                            TextSpan(text: '$name\n', style: const TextStyle(fontStyle: FontStyle.italic)),
+                            const TextSpan(text: 'Aadhaar ID: ', style: TextStyle(fontWeight: FontWeight.w700)),
+                            TextSpan(text: '$maskedAadhaar\n\n', style: const TextStyle(fontStyle: FontStyle.italic)),
+                            const TextSpan(text: '(hereinafter referred to as the "Policyholder").\n\n'),
+                            const TextSpan(text: 'WHEREAS the Policyholder is engaged as a gig-economy worker, and WHEREAS the Insurer provides parametric income-protection insurance.\n\n'),
+                            const TextSpan(text: '1. TERMS OF COVERAGE\n', style: TextStyle(fontWeight: FontWeight.w700)),
+                            const TextSpan(text: 'The Insurer agrees to compensate the Policyholder for loss of income arising directly from predefined parametric triggers (including but not limited to severe weather, flooding, and extreme heat) matching the thresholds defined by the IRDAI Sandbox guidelines.\n\n'),
+                            const TextSpan(text: '2. DIGITAL CONSENT & KYC\n', style: TextStyle(fontWeight: FontWeight.w700)),
+                            const TextSpan(text: 'By affixing an electronic signature via Aadhaar OTP, the Policyholder consents to the fetching of their demographic details from UIDAI/DigiLocker and authorises the Insurer to process this data for underwriting purposes.\n\n'),
+                            const TextSpan(text: '3. AUTO-ADJUDICATION\n', style: TextStyle(fontWeight: FontWeight.w700)),
+                            const TextSpan(text: 'Claims will be auto-adjudicated based on verified third-party API data (e.g., IMD, OpenWeather) corresponding to the Policyholder\'s declared working zone.\n\n'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(height: 40, width: 100, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.black54)))),
+                              const SizedBox(height: 4),
+                              const Text('Insurer Signature', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(height: 40, width: 100, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.black54)))),
+                              const SizedBox(height: 4),
+                              const Text('Policyholder E-Sign', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                              Text('Pending OTP', style: TextStyle(fontSize: 9, color: Colors.red[300], fontStyle: FontStyle.italic)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

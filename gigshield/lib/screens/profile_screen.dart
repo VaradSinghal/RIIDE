@@ -134,35 +134,37 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                MockData.workerName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  MockData.workerName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'ID: ${MockData.workerId}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: 2),
+                Text(
+                  'ID: ${MockData.workerId}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                '${MockData.workerZone}, ${MockData.workerCity}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+                Text(
+                  '${MockData.workerZone}, ${MockData.workerCity}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(

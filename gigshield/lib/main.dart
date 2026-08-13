@@ -4,6 +4,7 @@ import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/boost_screen.dart';
 import 'screens/insurance_screen.dart';
+import 'screens/risk_map_screen.dart';
 import 'screens/wallet_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/landing_screen.dart';
@@ -139,12 +140,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     super.dispose();
   }
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    BoostScreen(),
-    InsuranceScreen(),
-    WalletScreen(),
-    ProfileScreen(),
+  bool get _isAdmin => MockData.workerName.contains('Admin');
+
+  List<Widget> get _screens => [
+    const DashboardScreen(),
+    _isAdmin ? const RiskMapScreen() : const BoostScreen(),
+    const InsuranceScreen(),
+    const WalletScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -168,7 +171,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(0, Icons.dashboard_rounded, 'Home'),
-                _buildNavItem(1, Icons.rocket_launch_rounded, 'Boost'),
+                _buildNavItem(1, _isAdmin ? Icons.hexagon_rounded : Icons.rocket_launch_rounded, _isAdmin ? 'H3 Map' : 'Boost'),
                 _buildNavItem(2, Icons.shield_rounded, 'Insurance'),
                 _buildNavItem(
                   3,
