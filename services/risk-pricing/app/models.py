@@ -5,7 +5,7 @@ H3 zone risk scores and premium quotes.
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Numeric, Boolean, DateTime, Index
+from sqlalchemy import Column, String, Numeric, Integer, Boolean, DateTime, Index
 from sqlalchemy.dialects.postgresql import UUID
 
 import sys, os

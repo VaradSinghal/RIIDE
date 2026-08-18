@@ -31,17 +31,6 @@ async def orchestrate_claim(req: DemoClaimRequest):
     Agent Orchestration Endpoint.
     Coordinates Trust-Fraud AI, Risk-Pricing AI, and Claims AI for a single decision.
     """
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        # Step 1: Trust-Fraud AI Evaluation
-        # We simulate the AI Fraud Agent inference directly or via an endpoint.
-        # Since we haven't exposed a pure inference route, we can just call it via adjudicate or we built one? 
-        # Wait, I didn't build a raw inference route on trust-fraud. 
-        # For demo purposes, we will just simulate calling the models if they are on separate services, 
-        # or we can hit the actual endpoints if we exposed them.
-        pass
-
-    # Actually, let's just make direct calls to the services since we have `/risk/weather`, `/adjudicate`, etc.
-    # To truly orchestrate, let's fetch weather from Risk, pass it to Adjudicator.
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             # 1. Fetch Weather (Risk AI)

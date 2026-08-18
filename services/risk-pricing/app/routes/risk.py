@@ -26,13 +26,24 @@ async def city_heatmap(city: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/weather/{h3_index}")
 async def zone_weather(h3_index: str, city: str = "Chennai"):
-    """Get current weather data for a zone."""
+    """Get current weather + AQI + flood + civic data for a zone."""
     weather = weather_provider.get_weather(h3_index, city)
     aqi = weather_provider.get_aqi(h3_index, city)
     flood = weather_provider.get_flood_alerts(h3_index, city)
+
+    # Civic disruption data (mock — in production, sourced from news + traffic APIs)
+    civic = {
+        "active": False,
+        "description": "All clear",
+        "severity": "none",
+        "zone": h3_index,
+        "source": "News + Traffic API (Mock)",
+    }
+
     return {
         "h3_index": h3_index,
         "weather": weather.__dict__,
         "aqi": aqi.__dict__,
         "flood": flood.__dict__,
+        "civic": civic,
     }

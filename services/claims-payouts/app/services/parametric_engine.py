@@ -166,8 +166,12 @@ async def get_trigger_status(h3_zone: str, city: str) -> list[dict]:
     data = await fetch_weather_and_aqi(h3_zone, city)
     weather = data.get("weather", {"rainfall_6hr_mm": 0, "temperature_c": 32})
     aqi = data.get("aqi", {"aqi": 100})
-    flood = data.get("flood", {"active": False, "active_alert": False, "message": "No alerts"})
+    flood = data.get("flood", {"active": False, "message": "No alerts"})
     civic = data.get("civic", {"active": False, "description": "All clear"})
+
+    # Normalize flood field: provider may use "active" or "active_alert"
+    flood_active = flood.get("active", False) or flood.get("active_alert", False)
+    flood_message = flood.get("message", "No alerts")
 
     return [
         {
@@ -201,18 +205,18 @@ async def get_trigger_status(h3_zone: str, city: str) -> list[dict]:
             "trigger_type": "flooding",
             "label": "Flood Alert",
             "threshold": "IMD alert active",
-            "current_value": flood["alert_message"] if flood["active_alert"] else "No alerts",
-            "risk_level": 0.9 if flood["active_alert"] else 0.0,
-            "status": "triggered" if flood["active_alert"] else "safe",
+            "current_value": flood_message if flood_active else "No alerts",
+            "risk_level": 0.9 if flood_active else 0.0,
+            "status": "triggered" if flood_active else "safe",
             "source": "IMD Alert Feed",
         },
         {
             "trigger_type": "civic_disruption",
             "label": "Civic Disruption",
             "threshold": "Zone closure",
-            "current_value": civic["description"] if civic["active"] else "All clear",
-            "risk_level": 0.8 if civic["active"] else 0.0,
-            "status": "triggered" if civic["active"] else "safe",
+            "current_value": civic.get("description", "All clear") if civic.get("active", False) else "All clear",
+            "risk_level": 0.8 if civic.get("active", False) else 0.0,
+            "status": "triggered" if civic.get("active", False) else "safe",
             "source": "News + Traffic API",
         },
     ]
