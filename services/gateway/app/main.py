@@ -17,6 +17,16 @@ app = FastAPI(
     version="2.0.0",
 )
 
+# Fail fast if KYC config is invalid (e.g. mock in production)
+try:
+    from app.kyc.factory import get_kyc_provider
+    get_kyc_provider()
+except RuntimeError as e:
+    import logging
+    logging.error(f"Startup failed: {str(e)}")
+    import sys
+    sys.exit(1)
+
 # CORS for Flutter app and React admin dashboard
 app.add_middleware(
     CORSMiddleware,

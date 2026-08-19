@@ -73,22 +73,111 @@ class GigKavachApiService {
     };
   }
 
-  static Future<Map<String, dynamic>> verifyKyc(String documentType, String documentNumber) async {
+  static Future<Map<String, dynamic>> startKyc() async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/kyc/verify'),
+        Uri.parse('$baseUrl/auth/kyc/start'),
         headers: _headers,
-        body: jsonEncode({
-          'document_type': documentType,
-          'document_number': documentNumber,
-        }),
-      ).timeout(const Duration(seconds: 2));
+      ).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) return jsonDecode(response.body);
     } catch (e) {
-      print('API Error (KYC): $e');
+      print('API Error (Start KYC): $e');
     }
-    // DEMO FALLBACK: Allow KYC to pass instantly if backend is unreachable
-    return {'status': 'verified', 'message': 'Demo KYC verified'};
+    return {'status': 'error', 'session_id': null};
+  }
+
+  static Future<Map<String, dynamic>> getKycStatus(String sessionId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/kyc/$sessionId'),
+        headers: _headers,
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Get KYC Status): $e');
+    }
+    return {'status': 'error'};
+  }
+
+  static Future<Map<String, dynamic>> verifyPanIdentity(String sessionId, String panNumber, String dob, String fullName) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/kyc/$sessionId/identity'),
+        headers: _headers,
+        body: jsonEncode({
+          'pan_number': panNumber,
+          'date_of_birth': dob,
+          'full_name': fullName,
+        }),
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (PAN Identity): $e');
+    }
+    return {'status': 'error', 'verified': false};
+  }
+
+  static Future<Map<String, dynamic>> initDigiLockerConsent(String sessionId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/kyc/$sessionId/consent'),
+        headers: _headers,
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (DigiLocker Consent): $e');
+    }
+    return {'status': 'error'};
+  }
+
+  static Future<Map<String, dynamic>> sendAadhaarOtp(String sessionId, String aadhaarNumber) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/kyc/$sessionId/aadhaar'),
+        headers: _headers,
+        body: jsonEncode({
+          'aadhaar_number': aadhaarNumber,
+        }),
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Aadhaar OTP): $e');
+    }
+    return {'status': 'error'};
+  }
+
+  static Future<Map<String, dynamic>> completeKyc({
+    required String sessionId,
+    required String panNumber,
+    required String aadhaarLast4,
+    required String aadhaarOtp,
+    required String consentTimestamp,
+    required String consentIp,
+    required String selfieHash,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/kyc/$sessionId/complete'),
+        headers: _headers,
+        body: jsonEncode({
+          'session_id': sessionId,
+          'pan_number': panNumber,
+          'aadhaar_last4': aadhaarLast4,
+          'aadhaar_otp': aadhaarOtp,
+          'consent_timestamp': consentTimestamp,
+          'consent_ip': consentIp,
+          'selfie_hash': selfieHash,
+        }),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Complete KYC): $e');
+    }
+    return {
+      'kyc_status': 'FAILED',
+      'provider': 'mock',
+      'environment': 'development'
+    };
   }
 
   // ── Workers ──

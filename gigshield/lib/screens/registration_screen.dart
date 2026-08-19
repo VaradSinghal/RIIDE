@@ -28,11 +28,18 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   // Step 2: Profile
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
+  final _panController = TextEditingController();
+  final _dobController = TextEditingController();
   final _aadhaarController = TextEditingController();
   final _kycOtpController = TextEditingController();
   bool _kycVerified = false;
-  int _kycStep = 0; // 0=Input, 1=Generating, 2=Review, 3=OTP, 4=Verified
+  int _kycStep = 0; // 0=PAN, 1=Loading PAN, 2=DigiLocker, 3=Aadhaar OTP, 4=Name Match, 5=Liveness, 6=Verified
   bool _kycConsent = false;
+  String? _kycSessionId;
+  String _fetchedPanName = '';
+  double _nameMatchScore = 0.0;
+  final bool _livenessPassed = false;
+  bool _livenessSelfieTaken = false;
   String _selectedCity = 'Chennai';
   String _selectedPlatform = 'Swiggy';
   String _vehicleType = 'Bike';
@@ -392,12 +399,6 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _inputField('Full Name', _nameController, Icons.person_rounded),
-        const SizedBox(height: 16),
-        _inputField('Age', _ageController, Icons.cake_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)], hint: 'e.g. 28'),
-        if (_ageController.text.isNotEmpty && (int.tryParse(_ageController.text) ?? 0) < 18)
-          Padding(padding: const EdgeInsets.only(top: 6), child: Text('Must be 18 or older', style: TextStyle(fontSize: 11, color: AppColors.onboardDanger))),
-        const SizedBox(height: 16),
         _dropdown('City', _selectedCity, _cities, Icons.location_city_rounded, (v) => setState(() { _selectedCity = v!; _selectedZone = _cityZones[_selectedCity]!.first; })),
         const SizedBox(height: 16),
         _dropdown('Platform', _selectedPlatform, _platforms, Icons.delivery_dining_rounded, (v) => setState(() => _selectedPlatform = v!)),
@@ -408,18 +409,62 @@ class _RegistrationScreenState extends State<RegistrationScreen>
         // KYC Section
         const SizedBox(height: 16),
         _label('Identity & Background Verification'),
+        
+        // SANDBOX BANNER
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(color: AppColors.onboardWarningBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.onboardWarning)),
+          child: Row(children: [
+            const Icon(Icons.science_rounded, color: AppColors.onboardWarning, size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+              Text('Development / Sandbox Mode', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.onboardWarning)),
+              Text('Your identity verification is currently simulated for development purposes.', style: TextStyle(fontSize: 11, color: AppColors.onboardWarning)),
+            ])),
+          ]),
+        ),
+        
         if (_kycStep == 0) ...[
-          _inputField('Aadhaar Number', _aadhaarController, Icons.badge_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)], hint: '12-digit Aadhaar'),
-          const SizedBox(height: 12),
+          _inputField('Full Name (As on PAN)', _nameController, Icons.person_rounded),
+          const SizedBox(height: 16),
+          _inputField('PAN Number', _panController, Icons.credit_card_rounded, formatters: [LengthLimitingTextInputFormatter(10)], hint: 'ABCDE1234F'),
+          const SizedBox(height: 16),
+          _inputField('Date of Birth', _dobController, Icons.calendar_today_rounded, hint: 'YYYY-MM-DD'),
+          const SizedBox(height: 16),
           SizedBox(width: double.infinity, child: OutlinedButton(
-            onPressed: _aadhaarController.text.length == 12 ? () async {
+            onPressed: (_panController.text.length == 10 && _nameController.text.isNotEmpty && _dobController.text.isNotEmpty) ? () async {
               setState(() => _kycStep = 1);
-              // Simulate API delay for document generation
-              await Future.delayed(const Duration(seconds: 1));
-              if (mounted) setState(() => _kycStep = 2);
+              
+              // 1. Start KYC session if we don't have one
+              if (_kycSessionId == null) {
+                final initRes = await GigKavachApiService.startKyc();
+                _kycSessionId = initRes['session_id'];
+              }
+              
+              if (_kycSessionId == null) {
+                if (mounted) setState(() => _kycStep = 0);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to initialize KYC')));
+                return;
+              }
+              
+              // 2. Verify PAN
+              final res = await GigKavachApiService.verifyPanIdentity(_kycSessionId!, _panController.text, _dobController.text, _nameController.text);
+              if (res['verified'] == true) {
+                if (mounted) setState(() {
+                  _fetchedPanName = res['fetched_name'] ?? _nameController.text;
+                  _nameMatchScore = res['name_match_score'] ?? 0.0;
+                  _kycStep = 2;
+                });
+              } else {
+                if (mounted) {
+                  setState(() => _kycStep = 0);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PAN Verification Failed')));
+                }
+              }
             } : null,
             style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
-            child: const Text('Start eKYC Verification', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+            child: const Text('Verify PAN', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
           )),
         ] else if (_kycStep == 1) ...[
           Container(
@@ -428,9 +473,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
             child: Column(children: [
               const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onboardBluePrimary)),
               const SizedBox(height: 16),
-              const Text('Fetching records via CERSAI...', style: TextStyle(fontSize: 13, color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              Text('Generating onboarding documents...', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted)),
+              const Text('Verifying PAN with NSDL...', style: TextStyle(fontSize: 13, color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
             ]),
           ),
         ] else if (_kycStep == 2) ...[
@@ -438,35 +481,41 @@ class _RegistrationScreenState extends State<RegistrationScreen>
             padding: const EdgeInsets.all(16),
             decoration: _cardDecor,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              GestureDetector(
-                onTap: () => _showDocumentPreview(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.onboardBlueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(8)),
-                  child: Row(children: [
-                    const Icon(Icons.picture_as_pdf_rounded, color: AppColors.onboardBluePrimary, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('GigKavach Master Policy', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
-                      const Text('Tap to view document', style: TextStyle(fontSize: 11, color: AppColors.onboardBluePrimary, decoration: TextDecoration.underline)),
-                    ])),
-                  ]),
-                ),
-              ),
+              Row(children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.onboardSuccess, size: 20),
+                const SizedBox(width: 8),
+                const Text('PAN Verified', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
+              ]),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => setState(() => _kycConsent = !_kycConsent),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Icon(_kycConsent ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded, color: _kycConsent ? AppColors.onboardSuccess : AppColors.onboardTextMuted, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text('I authorize GigKavach to fetch my KYC details from UIDAI and I agree to the policy terms.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextBody))),
-                ]),
+              const Text('Connect Aadhaar via DigiLocker', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 8),
+              
+              // DigiLocker Sandbox Warning
+              Container(
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(color: AppColors.onboardBlueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(8)),
+                child: const Text('DigiLocker Integration - Sandbox\nThis is a simulated DigiLocker authorization flow for development purposes.', style: TextStyle(fontSize: 11, color: AppColors.onboardBluePrimary)),
               ),
+              
+              _inputField('Aadhaar Number', _aadhaarController, Icons.badge_rounded, keyboardType: TextInputType.number, formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)], hint: '12-digit Aadhaar'),
               const SizedBox(height: 16),
               SizedBox(width: double.infinity, child: ElevatedButton(
-                onPressed: _kycConsent ? () => setState(() => _kycStep = 3) : null,
+                onPressed: _aadhaarController.text.length == 12 ? () async {
+                  setState(() => _kycStep = 1); // Loading
+                  await GigKavachApiService.initDigiLockerConsent(_kycSessionId!);
+                  final res = await GigKavachApiService.sendAadhaarOtp(_kycSessionId!, _aadhaarController.text);
+                  if (res['status'] != 'error') {
+                    if (mounted) setState(() => _kycStep = 3);
+                  } else {
+                    if (mounted) {
+                      setState(() => _kycStep = 2);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to trigger OTP')));
+                    }
+                  }
+                } : null,
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
-                child: const Text('E-Sign via Aadhaar OTP', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                child: const Text('Send Aadhaar OTP', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
               )),
             ]),
           ),
@@ -477,7 +526,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Enter Aadhaar OTP', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
               const SizedBox(height: 4),
-              Text('OTP sent to UIDAI registered mobile number for e-Sign.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted)),
+              const Text('OTP sent to UIDAI registered mobile number.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextMuted)),
               const SizedBox(height: 16),
               TextField(
                 controller: _kycOtpController, keyboardType: TextInputType.number,
@@ -487,23 +536,113 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                 decoration: const InputDecoration(hintText: '• • • • • •', hintStyle: TextStyle(color: AppColors.onboardTextMuted, letterSpacing: 8), border: InputBorder.none),
                 onChanged: (val) async {
                   if (val.length == 6) {
-                    setState(() => _kycStep = 1); // Loading state
-                    await Future.delayed(const Duration(milliseconds: 1500));
-                    final res = await GigKavachApiService.verifyKyc('aadhaar', _aadhaarController.text);
-                    if (res['status'] == 'verified') {
-                      if (mounted) setState(() { _kycStep = 4; _kycVerified = true; });
-                    } else {
-                      if (mounted) {
-                        setState(() { _kycStep = 3; _kycOtpController.clear(); });
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('E-Sign Failed')));
-                      }
-                    }
+                    if (mounted) setState(() => _kycStep = 4);
                   }
                 },
               ),
             ]),
           ),
         ] else if (_kycStep == 4) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Identity Match', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 12),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text('PAN Name:', style: TextStyle(fontSize: 13, color: AppColors.onboardTextMuted)),
+                Text(_fetchedPanName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.onboardTextDark)),
+              ]),
+              const SizedBox(height: 8),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text('Aadhaar Name:', style: TextStyle(fontSize: 13, color: AppColors.onboardTextMuted)),
+                Text(_nameController.text.toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.onboardTextDark)),
+              ]),
+              const SizedBox(height: 16),
+              Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(8)),
+                child: Row(children: [
+                  const Icon(Icons.check_circle_rounded, color: AppColors.onboardSuccess, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Names match (${(_nameMatchScore*100).toInt()}% confidence)', style: const TextStyle(fontSize: 11, color: AppColors.onboardSuccess, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(width: double.infinity, child: ElevatedButton(
+                onPressed: () => setState(() => _kycStep = 5),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                child: const Text('Proceed to Liveness Check', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              )),
+            ]),
+          ),
+        ] else if (_kycStep == 5) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+              const Text('In-Person Verification (IPV)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 8),
+              const Text('Write this code on a piece of paper and hold it up while taking a selfie.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.onboardTextBody)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(color: AppColors.onboardBlueSoft, borderRadius: BorderRadius.circular(8)),
+                child: const Text('4 9 2 1', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 8, color: AppColors.onboardBluePrimary)),
+              ),
+              const SizedBox(height: 20),
+              if (_livenessSelfieTaken) ...[
+                Container(
+                  height: 150, width: double.infinity,
+                  decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
+                  child: const Center(child: Icon(Icons.image_rounded, color: Colors.grey, size: 40)),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () => setState(() => _kycConsent = !_kycConsent),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Icon(_kycConsent ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded, color: _kycConsent ? AppColors.onboardSuccess : AppColors.onboardTextMuted, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(child: Text('I provide DPDP consent to process my data for insurance underwriting.', style: TextStyle(fontSize: 11, color: AppColors.onboardTextBody))),
+                  ]),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(width: double.infinity, child: ElevatedButton(
+                  onPressed: _kycConsent ? () async {
+                    setState(() => _kycStep = 1); // Loading
+                    final res = await GigKavachApiService.completeKyc(
+                      sessionId: _kycSessionId ?? 'demo',
+                      panNumber: _panController.text,
+                      aadhaarLast4: _aadhaarController.text.length >= 4 ? _aadhaarController.text.substring(_aadhaarController.text.length - 4) : '0000',
+                      aadhaarOtp: _kycOtpController.text,
+                      consentTimestamp: DateTime.now().toIso8601String(),
+                      consentIp: '192.168.1.1',
+                      selfieHash: 'demohash1234567890',
+                    );
+                    if (res['kyc_status'] == 'SUCCESS' || res['kyc_status'] == 'completed') {
+                      if (mounted) setState(() { _kycStep = 6; _kycVerified = true; });
+                    } else {
+                      if (mounted) {
+                        setState(() => _kycStep = 5);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Finalization Failed')));
+                      }
+                    }
+                  } : null,
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                  child: const Text('E-Sign & Complete KYC', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                )),
+              ] else ...[
+                SizedBox(width: double.infinity, child: OutlinedButton.icon(
+                  onPressed: () {
+                    // Simulate opening camera and taking a picture
+                    setState(() => _livenessSelfieTaken = true);
+                  },
+                  icon: const Icon(Icons.camera_alt_rounded, color: AppColors.onboardBluePrimary, size: 18),
+                  label: const Text('Take Selfie', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.onboardBluePrimary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                )),
+              ]
+            ]),
+          ),
+        ] else if (_kycStep == 6) ...[
           Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.onboardSuccess.withValues(alpha: 0.3))),
@@ -512,11 +651,56 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                   child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
                 const SizedBox(width: 12),
                 const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Document E-Signed successfully.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
-                  Text('KYC fetched via DigiLocker.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess)),
+                  Text('KYC Complete.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
+                  Text('Verification Provider: Development Sandbox\nThis verification is simulated and is not a government verification.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess)),
                 ])),
               ]),
           ),
+        ],
+        const SizedBox(height: 24),
+        
+        // Developer Tool Panel
+        if (!_kycVerified) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300]!)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Developer Panel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                ActionChip(
+                  label: const Text('Auto-Fill Success', style: TextStyle(fontSize: 10)),
+                  onPressed: () {
+                    setState(() {
+                      _nameController.text = 'Varad Singhal';
+                      _panController.text = 'ABCDE1234F';
+                      _dobController.text = '1990-01-01';
+                      _aadhaarController.text = '999999999999';
+                    });
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Auto-Fill Failed PAN', style: TextStyle(fontSize: 10)),
+                  onPressed: () {
+                    setState(() {
+                      _panController.text = 'XXXXX0000X';
+                      _nameController.text = 'Varad Singhal';
+                      _dobController.text = '1990-01-01';
+                    });
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Fast-Track Verified', style: TextStyle(fontSize: 10)),
+                  onPressed: () {
+                    setState(() {
+                      _kycStep = 6;
+                      _kycVerified = true;
+                    });
+                  },
+                ),
+              ])
+            ]),
+          )
         ],
         const SizedBox(height: 16),
       ]),

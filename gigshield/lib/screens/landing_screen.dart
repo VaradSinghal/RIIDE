@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 import 'registration_screen.dart';
 import 'sign_in_screen.dart';
-import '../widgets/common_widgets.dart';
 
 class LandingScreen extends StatelessWidget {
   final void Function(BuildContext) onRegistrationComplete;

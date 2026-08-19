@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import 'supabase_service.dart';
 import 'api_service.dart';
 
 class ClaimEvent {

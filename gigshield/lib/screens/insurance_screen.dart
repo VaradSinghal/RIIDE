@@ -29,7 +29,7 @@ class _InsuranceScreenState extends State<InsuranceScreen>
   late PremiumResult _premiumResult;
   bool _isRecalculating = false;
   String _currentZone = MockData.workerZone;
-  String _currentCity = MockData.workerCity;
+  final String _currentCity = MockData.workerCity;
 
   @override
   void initState() {
