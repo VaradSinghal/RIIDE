@@ -23,6 +23,8 @@ class PremiumRequest(BaseModel):
     claim_rate: float = 0.0
     vehicle_type: str = "bike"
     worker_age: int = 25
+    verified_daily_hours: float = 8.0
+    verified_daily_income: float = 500.0
 
 
 @router.post("/calculate")
@@ -40,6 +42,8 @@ async def calc_premium(req: PremiumRequest, db: AsyncSession = Depends(get_db)):
         claim_rate=req.claim_rate,
         vehicle_type=req.vehicle_type,
         worker_age=req.worker_age,
+        verified_daily_hours=req.verified_daily_hours,
+        verified_daily_income=req.verified_daily_income,
     )
     await db.commit()
     return result

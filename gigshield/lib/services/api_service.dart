@@ -180,6 +180,49 @@ class GigKavachApiService {
     };
   }
 
+  // ── Platform Integration ──
+
+  static Future<Map<String, dynamic>> linkPlatform(String platformName) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/platform/link'),
+        headers: _headers,
+        body: jsonEncode({'platform_name': platformName}),
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Platform Link): $e');
+    }
+    return {'status': 'error'};
+  }
+
+  static Future<Map<String, dynamic>> verifyPlatformLogin(String sessionId, String phone, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/platform/$sessionId/verify'),
+        headers: _headers,
+        body: jsonEncode({'phone': phone, 'otp': otp}),
+      ).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Platform Verify): $e');
+    }
+    return {'status': 'error'};
+  }
+
+  static Future<Map<String, dynamic>> syncPlatformData(String sessionId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/platform/$sessionId/sync'),
+        headers: _headers,
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+    } catch (e) {
+      print('API Error (Platform Sync): $e');
+    }
+    return {'status': 'error'};
+  }
+
   // ── Workers ──
 
   static Future<Map<String, dynamic>> getWorkerProfile(String workerId) async {

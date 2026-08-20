@@ -40,13 +40,22 @@ class AIUnderwriter:
             loyalty_disc = min(experience_weeks / 16 * 5, 12)
             safe_disc = 3 if zone_risk < 30 else 0
             
+            # Phase 3: AI Underwriting with verified hours and income
+            verified_daily_hours = random.uniform(4.0, 16.0)
+            verified_daily_income = verified_daily_hours * random.uniform(40, 100)
+            
+            # Fatigue penalty: hours > 12 increases risk non-linearly
+            fatigue_penalty = max(0, (verified_daily_hours - 12) ** 2) * 1.5
+            # Moral hazard discount: higher stable income reduces risk
+            stability_discount = min((verified_daily_income / 1500) * 4, 6)
+            
             noise = random.uniform(-2, 2)
             
-            premium = max(15.0, base + zone_adj + weather_adj + veh_adj + age_adj + claims_adj - loyalty_disc - safe_disc + noise)
+            premium = max(15.0, base + zone_adj + weather_adj + veh_adj + age_adj + claims_adj - loyalty_disc - safe_disc + fatigue_penalty - stability_discount + noise)
             
-            data.append([zone_risk, weather_risk, experience_weeks, claim_rate, vehicle_type_val, worker_age, premium])
+            data.append([zone_risk, weather_risk, experience_weeks, claim_rate, vehicle_type_val, worker_age, verified_daily_hours, verified_daily_income, premium])
             
-        df = pd.DataFrame(data, columns=["zone_risk", "weather_risk", "experience_weeks", "claim_rate", "vehicle_type", "worker_age", "target_premium"])
+        df = pd.DataFrame(data, columns=["zone_risk", "weather_risk", "experience_weeks", "claim_rate", "vehicle_type", "worker_age", "verified_daily_hours", "verified_daily_income", "target_premium"])
         df.to_csv(CSV_PATH, index=False)
         logger.info(f"Generated data at {CSV_PATH}")
 
@@ -67,20 +76,20 @@ class AIUnderwriter:
         self.y_train = y
         logger.info("AI Underwriting model trained successfully.")
 
-    def predict_premium(self, zone_risk: float, weather_risk: float, experience_weeks: int, claim_rate: float, vehicle_type: str, worker_age: int) -> dict:
+    def predict_premium(self, zone_risk: float, weather_risk: float, experience_weeks: int, claim_rate: float, vehicle_type: str, worker_age: int, verified_daily_hours: float, verified_daily_income: float) -> dict:
         """Run AI inference for premium pricing."""
         if not self.is_trained:
             self.train_model()
             
         veh_val = 0 if vehicle_type.lower() == "bike" else 1 if vehicle_type.lower() == "ev" else 2
         
-        features = np.array([[zone_risk, weather_risk, experience_weeks, claim_rate, veh_val, worker_age]])
+        features = np.array([[zone_risk, weather_risk, experience_weeks, claim_rate, veh_val, worker_age, verified_daily_hours, verified_daily_income]])
         
         prediction = self.model.predict(features)[0]
         
         # Feature importances for explainability
         importances = self.model.feature_importances_
-        feature_names = ["Zone Risk", "Weather Severity", "Experience", "Claim Rate", "Vehicle Type", "Age"]
+        feature_names = ["Zone Risk", "Weather Severity", "Experience", "Claim Rate", "Vehicle Type", "Age", "Hours/Day", "Income/Day"]
         
         confidence = round(self.model.score(self.X_train, self.y_train) * 100, 1)
         

@@ -30,6 +30,8 @@ class Worker(Base):
     experience_weeks = Column(Integer, default=0)
     avg_daily_income = Column(Numeric(8, 2), nullable=True)
     avg_weekly_income = Column(Numeric(8, 2), nullable=True)
+    is_income_verified = Column(Boolean, default=False)
+    verified_platform = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
 

@@ -26,6 +26,8 @@ app = FastAPI(
 app.include_router(dashboard.router, prefix="/workers", tags=["Workers"])
 app.include_router(earnings.router, prefix="/earnings", tags=["Earnings"])
 app.include_router(decision.router, prefix="/decision", tags=["Decision"])
+from app.routes import platform
+app.include_router(platform.router, prefix="/platform", tags=["Platform Sync"])
 
 
 @app.get("/health")

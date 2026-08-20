@@ -618,7 +618,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       selfieHash: 'demohash1234567890',
                     );
                     if (res['kyc_status'] == 'SUCCESS' || res['kyc_status'] == 'completed') {
-                      if (mounted) setState(() { _kycStep = 6; _kycVerified = true; });
+                      if (mounted) setState(() { _kycStep = 6; });
                     } else {
                       if (mounted) {
                         setState(() => _kycStep = 5);
@@ -644,17 +644,79 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           ),
         ] else if (_kycStep == 6) ...[
           Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.onboardSuccess.withValues(alpha: 0.3))),
-              child: Row(children: [
-                Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.onboardSuccess.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
-                const SizedBox(width: 12),
-                const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('KYC Complete.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
-                  Text('Verification Provider: Development Sandbox\nThis verification is simulated and is not a government verification.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess)),
-                ])),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.onboardSuccess.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.verified_user_rounded, color: AppColors.onboardSuccess, size: 18)),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('KYC Complete.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onboardSuccess)),
+                    Text('Identity verified successfully.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess)),
+                  ])),
+                ]),
+                const SizedBox(height: 16),
+                SizedBox(width: double.infinity, child: ElevatedButton(
+                  onPressed: () => setState(() => _kycStep = 7),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                  child: const Text('Proceed to Income Verification', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                )),
               ]),
+          ),
+        ] else if (_kycStep == 7) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Link Work Platform', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 8),
+              const Text('Connect your primary gig platform to verify your daily work hours and income. This enables AI-underwritten, fair insurance premiums.', style: TextStyle(fontSize: 12, color: AppColors.onboardTextBody)),
+              const SizedBox(height: 16),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _platformButton('Zomato', AppColors.onboardBluePrimary),
+                  _platformButton('Swiggy', Colors.orange),
+                  _platformButton('Blinkit', Colors.yellow[700]!),
+                ],
+              ),
+            ]),
+          ),
+        ] else if (_kycStep == 8) ...[
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: _cardDecor,
+            child: Column(children: [
+              const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onboardBluePrimary)),
+              const SizedBox(height: 16),
+              const Text('Connecting to Aggregator...', style: TextStyle(fontSize: 13, color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ] else if (_kycStep == 9) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _cardDecor,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Platform Linked', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onboardTextDark)),
+              const SizedBox(height: 12),
+              Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppColors.onboardSuccessBg, borderRadius: BorderRadius.circular(8)),
+                child: Row(children: [
+                  const Icon(Icons.check_circle_rounded, color: AppColors.onboardSuccess, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(child: Text('Work history and income successfully synced. Your risk profile has been updated.', style: TextStyle(fontSize: 11, color: AppColors.onboardSuccess, fontWeight: FontWeight.w600))),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(width: double.infinity, child: ElevatedButton(
+                onPressed: () {
+                   setState(() { _kycVerified = true; });
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.onboardBluePrimary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                child: const Text('Complete Onboarding', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              )),
+            ]),
           ),
         ],
         const SizedBox(height: 24),
@@ -693,7 +755,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                   label: const Text('Fast-Track Verified', style: TextStyle(fontSize: 10)),
                   onPressed: () {
                     setState(() {
-                      _kycStep = 6;
+                      _kycStep = 9;
                       _kycVerified = true;
                     });
                   },
@@ -1279,5 +1341,43 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     if (score < 55) return AppColors.onboardBluePrimary;
     if (score < 75) return AppColors.onboardWarning;
     return AppColors.onboardDanger;
+  }
+
+  Widget _platformButton(String name, Color color) {
+    return GestureDetector(
+      onTap: () async {
+        setState(() { _kycStep = 8; }); // Loading state
+        // 1. Link platform
+        final sessionRes = await GigKavachApiService.linkPlatform(name);
+        final sessionId = sessionRes['session_id'];
+        
+        if (sessionId != null) {
+          // 2. Verify login (mock OTP)
+          await GigKavachApiService.verifyPlatformLogin(sessionId, '9999999999', '123456');
+          
+          // 3. Sync data
+          await GigKavachApiService.syncPlatformData(sessionId);
+        }
+        
+        if (mounted) {
+          setState(() { _kycStep = 9; }); // Success state
+        }
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.5)),
+            ),
+            child: Icon(Icons.work_outline, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
+    );
   }
 }

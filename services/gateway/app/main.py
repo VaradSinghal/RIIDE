@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.proxy import router as proxy_router
 from app.auth import router as auth_router
 from app.orchestrator import router as orchestrator_router
-
+from app.platform_routes import router as platform_router
 
 app = FastAPI(
     title="GigKavach — API Gateway",
@@ -44,6 +44,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(platform_router, prefix="/api/v1/auth/platform", tags=["Platform Integration"])
 app.include_router(orchestrator_router, prefix="/api/v1/demo", tags=["Demo Orchestrator"])
 app.include_router(proxy_router, prefix="/api/v1", tags=["Proxy"])
 
