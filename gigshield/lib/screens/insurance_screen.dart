@@ -10,6 +10,7 @@ import '../widgets/payment_processing_overlay.dart';
 import 'claim_detail_screen.dart';
 import '../services/notification_service.dart';
 import '../models/notification_model.dart';
+import '../services/api_service.dart';
 
 class InsuranceScreen extends StatefulWidget {
   const InsuranceScreen({super.key});
@@ -249,6 +250,22 @@ class _InsuranceScreenState extends State<InsuranceScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildActivePolicyCard(),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                GigKavachApiService.downloadPolicyPdf(MockData.policyId);
+              },
+              icon: const Icon(Icons.download_rounded, color: AppColors.onboardBluePrimary, size: 20),
+              label: const Text('Download Policy Document (PDF)', style: TextStyle(color: AppColors.onboardBluePrimary, fontWeight: FontWeight.w700)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.onboardBluePrimary, width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           _buildPolicyDetails(),
           const SectionHeader(title: 'Policy History'),
