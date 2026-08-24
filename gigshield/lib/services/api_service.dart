@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../data/mock_data.dart';
 
 import 'dart:io' show Platform;
@@ -221,6 +222,23 @@ class GigKavachApiService {
       print('API Error (Platform Sync): $e');
     }
     return {'status': 'error'};
+  }
+
+  // ── Policy Issuance ──
+  
+  static Future<void> downloadPolicyPdf(String quoteId) async {
+    // For demo purposes, we will launch the URL in the browser
+    // This allows the OS to handle the PDF download/rendering natively
+    final url = Uri.parse('$baseUrl/auth/policy/$quoteId/pdf');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        print('Could not launch PDF URL');
+      }
+    } catch (e) {
+      print('Error launching PDF: $e');
+    }
   }
 
   // ── Workers ──
