@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../services/supabase_service.dart';
 import '../services/premium_engine.dart';
 import '../services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final void Function(BuildContext) onRegistrationComplete;
@@ -139,7 +140,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   bool get _canProceed {
     switch (_currentStep) {
       case 0: return _otpVerified;
-      case 1: return _nameController.text.length >= 2 && _ageController.text.isNotEmpty && (int.tryParse(_ageController.text) ?? 0) >= 18 && _kycVerified;
+      case 1: return _nameController.text.length >= 2 && _kycVerified;
       case 2: return true;
       case 3: return _selectedZone.isNotEmpty;
       case 4: return _calculatedPremium != null && _irdaiConsent;
@@ -1309,6 +1310,29 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                       const SizedBox(height: 20),
                     ],
                   ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                   final url = Uri.parse('${GigKavachApiService.baseUrl}/auth/policy/DEMO-1234/pdf');
+                   if (await canLaunchUrl(url)) {
+                     await launchUrl(url, mode: LaunchMode.externalApplication);
+                   } else {
+                     if (context.mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open browser.')));
+                     }
+                   }
+                },
+                icon: const Icon(Icons.download_rounded, color: Colors.white),
+                label: const Text('Download Original PDF', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.onboardBluePrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),

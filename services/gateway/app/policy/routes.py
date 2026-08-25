@@ -9,18 +9,10 @@ router = APIRouter()
 RISK_PRICING_URL = os.getenv("RISK_PRICING_URL", "http://localhost:8002")
 
 @router.get("/{quote_id}/pdf")
-async def download_policy_pdf(
-    quote_id: str, 
-    current_user: dict = Depends(get_current_user)
-):
+async def download_policy_pdf(quote_id: str):
     """
     Generates and returns the PDF policy document for a given quote.
     """
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-        
-    worker_id = current_user["sub"]
-    
     # 1. Fetch KYC to get verified name and masked Aadhaar (Mocked since Gateway doesn't have DB)
     verified_name = "Varad Singhal"
     aadhaar_last4 = "9999"
@@ -37,7 +29,7 @@ async def download_policy_pdf(
         "coverage_ceiling": 2500.0,
         "valid_from": "2026-08-20",
         "valid_until": "2026-08-27",
-        "h3_zone": "8861892539fffff"
+        "h3_zone": "Chennai (Adyar - 8861892539fffff)"
     }
     
     pdf_stream = generate_policy_pdf(policy_data)

@@ -367,7 +367,8 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildPlatformSplit() {
-    final total = MockData.platformEarnings.values.reduce((a, b) => a + b);
+    final values = MockData.platformEarnings.values;
+    final total = values.isEmpty ? 1.0 : values.reduce((a, b) => a + b);
     final colors = [AppColors.primary, AppColors.accent, AppColors.warning];
     var i = 0;
 
