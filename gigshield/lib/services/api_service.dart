@@ -12,13 +12,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class GigKavachApiService {
   // API Gateway URL — handles Android emulator 10.0.2.2 trick automatically
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8000/api/v1';
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api/v1';
-    } else {
-      return 'http://localhost:8000/api/v1';
-    }
+    // We will use localhost across the board and use 'adb reverse'
+    // to map the physical device's localhost to the PC's localhost.
+    return 'http://localhost:8000/api/v1';
   }
 
   static String? _authToken;

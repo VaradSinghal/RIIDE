@@ -2,10 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from app.auth import get_current_user
 from app.policy.pdf_generator import generate_policy_pdf
-from app.database import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from app.models import KycRecord
 import httpx
 import os
 
@@ -15,8 +11,7 @@ RISK_PRICING_URL = os.getenv("RISK_PRICING_URL", "http://localhost:8002")
 @router.get("/{quote_id}/pdf")
 async def download_policy_pdf(
     quote_id: str, 
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Generates and returns the PDF policy document for a given quote.
@@ -26,19 +21,16 @@ async def download_policy_pdf(
         
     worker_id = current_user["sub"]
     
-    # 1. Fetch KYC to get verified name and masked Aadhaar
-    stmt = select(KycRecord).where(KycRecord.worker_id == worker_id).order_by(KycRecord.created_at.desc())
-    result = await db.execute(stmt)
-    kyc_record = result.scalars().first()
+    # 1. Fetch KYC to get verified name and masked Aadhaar (Mocked since Gateway doesn't have DB)
+    verified_name = "Varad Singhal"
+    aadhaar_last4 = "9999"
     
-    # 2. Fetch Quote Details (Simulation for now, or fetch from DB if we had risk-pricing DB access)
-    # Since we are in the gateway, we might need to hit risk-pricing. For demo purposes, we will mock if it fails.
-    # We can assume quote_id is valid for this worker.
+    # 2. Fetch Quote Details (Simulation for now)
     policy_data = {
         "policy_id": f"GK-POL-{quote_id[:8].upper()}",
-        "name": kyc_record.verified_name if kyc_record and kyc_record.verified_name else "Varad Singhal",
-        "aadhaar": kyc_record.aadhaar_last4 if kyc_record and kyc_record.aadhaar_last4 else "9999",
-        "verified_platform": "zomato", # We could fetch from worker-earnings
+        "name": verified_name,
+        "aadhaar": aadhaar_last4,
+        "verified_platform": "zomato",
         "vehicle_type": "bike",
         "plan_tier": "standard",
         "weekly_premium": 65.0,
