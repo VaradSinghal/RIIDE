@@ -5,7 +5,7 @@ Workers, earnings log, decision scores.
 
 import uuid
 from datetime import datetime, date
-from sqlalchemy import Column, String, Numeric, Integer, DateTime, Date, Index
+from sqlalchemy import Column, String, Numeric, Integer, DateTime, Date, Index, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 
 import sys, os
