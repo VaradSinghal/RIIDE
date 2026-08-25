@@ -6,6 +6,7 @@ import '../services/supabase_service.dart';
 import '../services/premium_engine.dart';
 import '../services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final void Function(BuildContext) onRegistrationComplete;
@@ -675,12 +676,13 @@ class _RegistrationScreenState extends State<RegistrationScreen>
               const Text('Connect your primary gig platform to verify your daily work hours and income. This enables AI-underwritten, fair insurance premiums.', style: TextStyle(fontSize: 12, color: AppColors.onboardTextBody)),
               const SizedBox(height: 16),
               
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Column(
                 children: [
-                  _platformButton('Zomato', AppColors.onboardBluePrimary),
-                  _platformButton('Swiggy', Colors.orange),
-                  _platformButton('Blinkit', Colors.yellow[700]!),
+                  _socialLoginButton('Zomato', const Color(0xFFE23744)),
+                  const SizedBox(height: 12),
+                  _socialLoginButton('Swiggy', const Color(0xFFFC8019)),
+                  const SizedBox(height: 12),
+                  _socialLoginButton('Blinkit', const Color(0xFFF8CB46)),
                 ],
               ),
             ]),
@@ -1367,8 +1369,8 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     return AppColors.onboardDanger;
   }
 
-  Widget _platformButton(String name, Color color) {
-    return GestureDetector(
+  Widget _socialLoginButton(String name, Color brandColor) {
+    return InkWell(
       onTap: () async {
         setState(() { _kycStep = 8; }); // Loading state
         // 1. Link platform
@@ -1387,21 +1389,70 @@ class _RegistrationScreenState extends State<RegistrationScreen>
           setState(() { _kycStep = 9; }); // Success state
         }
       },
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withOpacity(0.5)),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02), 
+              blurRadius: 4, 
+              offset: const Offset(0, 2)
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: SvgPicture.string(_getLogoSvg(name)),
             ),
-            child: Icon(Icons.work_outline, color: color, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
-        ],
+            Expanded(
+              child: Text(
+                'Continue with $name', 
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14, 
+                  fontWeight: FontWeight.w600, 
+                  color: AppColors.onboardTextDark
+                ),
+              ),
+            ),
+            const SizedBox(width: 36), // to balance the 24px logo
+          ],
+        ),
       ),
     );
+  }
+
+  String _getLogoSvg(String platform) {
+    if (platform == 'Zomato') {
+      return '''
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="20" fill="#CB202D"/>
+  <text x="50" y="70" font-family="Arial" font-weight="900" font-style="italic" font-size="65" fill="white" text-anchor="middle">Z</text>
+</svg>
+      ''';
+    } else if (platform == 'Swiggy') {
+      return '''
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50 0 C 80 0 100 20 100 50 C 100 80 80 100 50 100 C 20 100 0 80 0 50 C 0 20 20 0 50 0 Z" fill="#FC8019"/>
+  <text x="50" y="72" font-family="Arial" font-weight="900" font-size="65" fill="white" text-anchor="middle">S</text>
+</svg>
+      ''';
+    } else if (platform == 'Blinkit') {
+      return '''
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="20" fill="#F8CB46"/>
+  <text x="50" y="75" font-family="Arial" font-weight="900" font-size="75" fill="#0F8C3B" text-anchor="middle">b</text>
+</svg>
+      ''';
+    }
+    return '';
   }
 }
